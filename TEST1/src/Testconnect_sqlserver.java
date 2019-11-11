@@ -3,6 +3,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 /**
@@ -17,7 +19,15 @@ public class Testconnect_sqlserver {
             Ramdom_List.add(1);
             Ramdom_List.add(2);
             Ramdom_List.add(5);
-            System.out.println(ExecuteFunction.CreateRandomteams(32));
+            String jsontest = "{\"A\":[{\"B\": \"3\"}, {\"C\": 4}]}";
+
+            JSONObject oj = new JSONObject(jsontest);
+            JSONArray new_arr = oj.getJSONArray("A");
+            System.out.println(new_arr.getJSONObject(0).getString("B"));
+            oj.put("A", new_arr);
+            System.out.println(new_arr);
+            System.out.println(oj);
+
 
         } catch (Exception e) {
             e.printStackTrace();

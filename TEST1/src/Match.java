@@ -15,7 +15,7 @@ public class Match {
     }
     private int team1Total = 0;
     private int team2Total = 0;
-    private static String getMatch(String team1, String team2){
+    public static String getMatch(String team1, String team2){
         int team1Score, team2Score;
 
         // Outward trip

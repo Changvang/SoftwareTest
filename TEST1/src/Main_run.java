@@ -27,6 +27,7 @@ public class Main_run {
         JSONObject all_team = ExecuteFunction.getJsonObject();
 
         // Display all team
+        System.out.println("Tat ca ca team ban dau : ");
         System.out.println(all_team.toString());
 
         // read JsonObject to find 4 team will have play-off games
@@ -52,6 +53,7 @@ public class Main_run {
         lose_team = Match.Playoff(Play_off_teams.get(0), Play_off_teams.get(1));
         all_team = ExecuteFunction.JSONRemoveBykey(all_team,"NAME",lose_team);
 
+        System.out.println("Sau tran playoff giua rank 6 AFC vs rank 4 CONCACAF");
         System.out.println(all_team.toString());
 
         // Play off : Rank 4 CONMEBOL of with rank 1 of OFC
@@ -59,13 +61,22 @@ public class Main_run {
         lose_team = Match.Playoff(Play_off_teams.get(2), Play_off_teams.get(3));
         all_team = ExecuteFunction.JSONRemoveBykey(all_team,"NAME",lose_team);
 
+        System.out.println("Sau tran playoff giua rank 6 COMMEBOL vs rank 1 OFC");
         System.out.println(all_team.toString());
 
         // Chia thanh 8 bang dau mot cach ngau nhien(Hien tai chi lam theo cach chia co thu tu cac bang)
         all_team = ExecuteFunction.SeperateTeam(all_team);
+        System.out.println("Tu 32 doi tao ra 8 bang dau tu A-G ngau nhien :");
         System.out.println(all_team.toString());
 
-        // Dau voi cac team trong mot bang va tra ket qua lan luot
+        // Dau voi cac team trong mot bang va tra ket qua lan luot bao gom tong ti so
+        all_team = ExecuteFunction.From32teamsto16teams(all_team);
+        System.out.println("Tat ca cac tran dau va ket qua trong 8 bang");
+        System.out.println(all_team.toString());
+        // Hien thi ket qua 16 doi
+
+        System.out.println("Nhat nhi cac vong bang :(16 doi con lai) :");
+
 
     }
 }

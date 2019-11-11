@@ -1,3 +1,4 @@
+import com.sun.jdi.event.ClassPrepareEvent;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -102,18 +103,20 @@ public class ExecuteFunction {
         for(int i = 0; i < teams.length(); i++){
             if(i < 4){
                 TableA.add(teams.getJSONObject(SeperateList.get(i)).put("STT", i%4+1));
-            }else if(i < 12){
+            }else if(i < 8){
                 TableB.add(teams.getJSONObject(SeperateList.get(i)).put("STT", i%4+1));
-            }else if(i < 16){
+            }else if(i < 12){
                 TableC.add(teams.getJSONObject(SeperateList.get(i)).put("STT", i%4+1));
-            }else if(i < 20){
+            }else if(i < 16){
                 TableD.add(teams.getJSONObject(SeperateList.get(i)).put("STT", i%4+1));
-            }else if(i < 24){
+            }else if(i < 20){
                 TableE.add(teams.getJSONObject(SeperateList.get(i)).put("STT", i%4+1));
-            }else if(i < 28){
+            }else if(i < 24){
                 TableF.add(teams.getJSONObject(SeperateList.get(i)).put("STT", i%4+1));
-            }else{
+            }else if(i < 28){
                 TableG.add(teams.getJSONObject(SeperateList.get(i)).put("STT", i%4+1));
+            }else{
+                TableH.add(teams.getJSONObject(SeperateList.get(i)).put("STT", i%4+1));
             }
         }
         // add to oj
@@ -142,4 +145,53 @@ public class ExecuteFunction {
         }
         return New_List;
     }
+
+    public static JSONObject From32teamsto16teams(JSONObject oj) throws JSONException {
+        int i = 0;
+        oj = Matchingwith4teams(oj,"A");
+        oj = Matchingwith4teams(oj,"B");
+        oj = Matchingwith4teams(oj,"C");
+        oj = Matchingwith4teams(oj,"D");
+        oj = Matchingwith4teams(oj,"E");
+        oj = Matchingwith4teams(oj,"F");
+        oj = Matchingwith4teams(oj,"G");
+        oj = Matchingwith4teams(oj,"H");
+        //function using to creating and counting match
+        return oj;
+    }
+
+    public static JSONObject Matchingwith4teams(JSONObject oj, String Table) throws JSONException {
+        JSONArray table4teams = oj.getJSONArray(Table);
+        // Tao mot cot SCORE
+        for(int i = 0; i < table4teams.length(); i++){
+            table4teams.getJSONObject(i).put("SCORE", 0);
+            table4teams.getJSONObject(i).put("GOALS", 0);
+        }
+        // match 1-2,1-3,1-4,2-3,2-4,3-4
+        for(int i = 0; i < 3; i++){
+            for(int j = i+1 ; j < 4; j++){
+                String matchresult = Match.getMatch(table4teams.getJSONObject(i).getString("NAME"),table4teams.getJSONObject(j).getString("NAME"));
+                // tinh tong so ban
+                table4teams.getJSONObject(i).put("GOALS",Integer.parseInt(table4teams.getJSONObject(i).get("GOALS").toString()) + Integer.parseInt(matchresult.split(":")[0]));
+                table4teams.getJSONObject(j).put("GOALS",Integer.parseInt(table4teams.getJSONObject(j).get("GOALS").toString()) + Integer.parseInt(matchresult.split(":")[1]));
+                // tinh diem
+                int firstteam = Integer.parseInt(matchresult.split(":")[0]);
+                int lastteam = Integer.parseInt(matchresult.split(":")[1]);
+                if(firstteam > lastteam){
+                    firstteam = 3; lastteam = 0;
+                }else if(firstteam < lastteam){
+                    firstteam = 0; lastteam = 3;
+                }else{
+                    firstteam = 1; lastteam =1;
+                }
+                table4teams.getJSONObject(i).put("SCORE",Integer.parseInt(table4teams.getJSONObject(i).get("SCORE").toString()) + firstteam);
+                table4teams.getJSONObject(j).put("SCORE",Integer.parseInt(table4teams.getJSONObject(j).get("SCORE").toString()) + lastteam);
+
+            }
+        }
+        oj.put(Table, table4teams);
+        return oj;
+    }
+
+    //public static JSONArray matchAndCOu
 }
