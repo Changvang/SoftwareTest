@@ -6,9 +6,7 @@ import org.json.JSONObject;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 public class ExecuteFunction {
     static ConnectionDB kn = new ConnectionDB();
@@ -34,6 +32,21 @@ public class ExecuteFunction {
                 items.add(item);
             }
             finalteam.put("Final", items);
+
+            //member
+            Collection<JSONObject> items_member = new ArrayList<JSONObject>();
+            sql = "SELECT * FROM MemberofTeam";
+            rs=stm.executeQuery(sql);
+            while(rs.next()){
+                JSONObject item = new JSONObject();
+                item.put("ID",rs.getString("ID"));
+                item.put("NAME",rs.getString("NAME"));
+                item.put("ROLE",rs.getString("ROLE"));
+                item.put("NATIONS",rs.getString("NATIONS"));
+                items_member.add(item);
+            }
+            finalteam.put("Member", items_member);
+
         }catch(Exception e){
             System.out.println("Some error at GetDB " +e);
         }
@@ -162,21 +175,165 @@ public class ExecuteFunction {
 
     public static JSONObject Matchingwith4teams(JSONObject oj, String Table) throws JSONException {
         JSONArray table4teams = oj.getJSONArray(Table);
+        //Lay tat ca du lieu va cac cau thu
+        JSONArray Member = oj.getJSONArray("Member");
+
+        for(int i = 0 ; i < table4teams.length(); i++){
+            int count = 0;
+            for(int j= 0 ; j < Member.length(); j++){
+                if(Member.getJSONObject(j).getString("NATIONS").equals(table4teams.getJSONObject(i).getString("NAME"))){
+                    count++;
+                }
+            }
+            System.out.println(table4teams.getJSONObject(i).getString("NAME") + count);
+        }
+
+        // Luu lai ket qua cua 8 tran
+        List<String> Match_result = new ArrayList<String>();
         // Tao mot cot SCORE
         for(int i = 0; i < table4teams.length(); i++){
             table4teams.getJSONObject(i).put("SCORE", 0);
             table4teams.getJSONObject(i).put("GOALS", 0);
+            table4teams.getJSONObject(i).put("CONCEDED", 0);
+            table4teams.getJSONObject(i).put("REDCARDS", 0);
+        }
+        for(int i = 0; i < Member.length(); i++){
+            Member.getJSONObject(i).put("SCORES", 0);
+
         }
         // match 1-2,1-3,1-4,2-3,2-4,3-4
         for(int i = 0; i < 3; i++){
             for(int j = i+1 ; j < 4; j++){
-                String matchresult = Match.getMatch(table4teams.getJSONObject(i).getString("NAME"),table4teams.getJSONObject(j).getString("NAME"));
-                // tinh tong so ban
-                table4teams.getJSONObject(i).put("GOALS",Integer.parseInt(table4teams.getJSONObject(i).get("GOALS").toString()) + Integer.parseInt(matchresult.split(":")[0]));
-                table4teams.getJSONObject(j).put("GOALS",Integer.parseInt(table4teams.getJSONObject(j).get("GOALS").toString()) + Integer.parseInt(matchresult.split(":")[1]));
+                Boolean matchresult = false ;
+                // dua ket qua vao trong Match_result
+                //Match_result.add(table4teams.getJSONObject(i).get("NAME").toString()+ ":" + matchresult + ":" + table4teams.getJSONObject(j).get("NAME").toString());
+
+
+                //Lay ten cua 2 doi
+                String team1 = table4teams.getJSONObject(i).getString("NAME");
+                String team2 = table4teams.getJSONObject(j).getString("NAME");
+
+                // Random so the do. Sau do xu li truong hop 5 the do va bi out.(Khong tinh ket qua ghi ban).
+                int[] redArray={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,3,4,5};
+                int team1RedCards = redArray[getRandomIntBetweenRange(0,redArray.length-1)];
+                int team2RedCards = redArray[getRandomIntBetweenRange(0,redArray.length-1)];
+                //Team1 Red Card
+                for(int x = 0; x<table4teams.length(); x++){
+                    String y = table4teams.getJSONObject(x).getString("NAME");
+                    if(y.equals(team1)){
+                        int redcards = table4teams.getJSONObject(x).getInt("REDCARDS");
+                        redcards  += team1RedCards;
+                        table4teams.getJSONObject(x).remove("REDCARDS");
+                        table4teams.getJSONObject(x).put("REDCARDS", redcards);
+                    }
+                }
+
+                // Team2 Red Card
+                for(int x = 0; x<table4teams.length(); x++){
+                    String y = table4teams.getJSONObject(x).getString("NAME");
+                    if(y.equals(team2)){
+                        int redcards = table4teams.getJSONObject(x).getInt("REDCARDS");
+                        redcards  += team1RedCards;
+                        table4teams.getJSONObject(x).remove("REDCARDS");
+                        table4teams.getJSONObject(x).put("REDCARDS", redcards);
+                    }
+                }
+
+                int team1Score;
+                int team2Score;
+
+                //In red card
+
+                System.out.println("Redcards : "+ team1 + " " + team1RedCards);
+                System.out.println("Redcards : "+ team2 + " " + team2RedCards);
+
+                // XU li truong hop 5 the do
+                if(team1RedCards==5){
+                    team1Score = 0;
+                    team2Score = 3;
+                    matchresult = true;
+
+                }else if (team2RedCards==5){
+                    team1Score = 3;
+                    team2Score = 0;
+                    matchresult = true;
+
+                }else{
+                    team1Score = getRandomIntBetweenRange(0,5);
+                    team2Score = getRandomIntBetweenRange(0,5);
+                }
+                // In ti so
+                System.out.println(team1 + " " + team1Score + " : " + team2Score + " " + team2);
+                if(!matchresult){
+                    //team1 Score
+                    System.out.println(team1+ "  :");
+                    List <JSONObject> Team1Member = new ArrayList<JSONObject>();
+                    for(int x = 0; x<Member.length(); x++){
+                        String y = Member.getJSONObject(x).getString("NATIONS");
+                        if(y.equals((team1))){
+                            Team1Member.add(Member.getJSONObject(x));
+                        }
+                    }
+
+                    for(int l = 0; l < team1Score; l++){
+                        int scorepos = getRandomIntBetweenRange(5, 26);
+                        String Name = Team1Member.get(scorepos).getString("NAME");
+                        System.out.println(Name);
+                        int pos = 0;
+                        for(int x = 0; x<Member.length(); x++){
+                            String y = Member.getJSONObject(x).getString("NAME");
+                            if(y.equals((Name))){
+                                pos = x;
+                                break;
+                            }
+                        }
+                        int x = Member.getJSONObject(pos).getInt("SCORES");
+                        x = x + 1;
+
+                        Member.getJSONObject(pos).put("SCORES", x);
+                        System.out.println(Member.get(pos));
+                    }
+
+                    //team2 Score
+                    System.out.println(team2+ "  :");
+                    List <JSONObject> Team2Member = new ArrayList<JSONObject>();
+                    for(int x = 0; x<Member.length(); x++){
+                        String y = Member.getJSONObject(x).getString("NATIONS");
+                        if(y.equals((team1))){
+                            Team2Member.add(Member.getJSONObject(x));
+                        }
+                    }
+
+                    for(int l = 0; l < team2Score; l++){
+                        int scorepos = getRandomIntBetweenRange(5, 26);
+                        String Name = Team2Member.get(scorepos).getString("NAME");
+                        System.out.println(Name);
+                        int pos = 0;
+                        for(int x = 0; x<Member.length(); x++){
+                            String y = Member.getJSONObject(x).getString("NAME");
+                            if(y.equals((Name))){
+                                pos = x;
+                                break;
+                            }
+                        }
+                        int x = Member.getJSONObject(pos).getInt("SCORES");
+                        x = x + 1;
+
+                        Member.getJSONObject(pos).put("SCORES", x);
+                        System.out.println(Member.get(pos));
+                    }
+
+                }
+
+                // tinh tong so ban thang
+                table4teams.getJSONObject(i).put("GOALS",table4teams.getJSONObject(i).getInt("GOALS") + team1Score);
+                table4teams.getJSONObject(j).put("GOALS",table4teams.getJSONObject(j).getInt("GOALS") + team2Score);
+                // tinh tong so ban thua
+                table4teams.getJSONObject(i).put("CONCEDED",table4teams.getJSONObject(i).getInt("CONCEDED") + team2Score);
+                table4teams.getJSONObject(j).put("CONCEDED",table4teams.getJSONObject(j).getInt("CONCEDED") + team1Score);
                 // tinh diem
-                int firstteam = Integer.parseInt(matchresult.split(":")[0]);
-                int lastteam = Integer.parseInt(matchresult.split(":")[1]);
+                int firstteam = team1Score;
+                int lastteam = team2Score;
                 if(firstteam > lastteam){
                     firstteam = 3; lastteam = 0;
                 }else if(firstteam < lastteam){
@@ -184,14 +341,69 @@ public class ExecuteFunction {
                 }else{
                     firstteam = 1; lastteam =1;
                 }
-                table4teams.getJSONObject(i).put("SCORE",Integer.parseInt(table4teams.getJSONObject(i).get("SCORE").toString()) + firstteam);
-                table4teams.getJSONObject(j).put("SCORE",Integer.parseInt(table4teams.getJSONObject(j).get("SCORE").toString()) + lastteam);
+                table4teams.getJSONObject(i).put("SCORE",table4teams.getJSONObject(i).getInt("SCORE") + firstteam);
+                table4teams.getJSONObject(j).put("SCORE",table4teams.getJSONObject(j).getInt("SCORE") + lastteam);
 
+                //
             }
         }
+        // Thay doi thu tu xep hang cua cac doi sau 6 tran dau.
+        table4teams = ChangeStt(table4teams);
+        oj.put("Member", Member);
         oj.put(Table, table4teams);
         return oj;
     }
 
-    //public static JSONArray matchAndCOu
+    public static JSONArray ChangeStt(JSONArray teams) throws JSONException {
+        // SAp xep thu tu cac doi bong tren tieu chi : Score -> Ti so ban thang thua -> So the do  -> boc tham
+        List<JSONObject> jsonValues = new ArrayList<JSONObject>();
+        for (int i = 0; i < teams.length(); i++) {
+            jsonValues.add(teams.getJSONObject(i));
+        }
+        Collections.sort(jsonValues, new Comparator<JSONObject>() {
+            @Override
+            public int compare(JSONObject a, JSONObject b) {
+                String valA = new String();
+                String valB = new String() ;
+                try{
+                    valA =  a.get("SCORE").toString();
+                    valB =  b.get("SCORE").toString();
+                    if(valB.compareTo(valA) != 0){
+                        return valB.compareTo(valA);
+                    }
+
+                    valA = Integer.toString(a.getInt("GOALS") - a.getInt("CONCEDED"));
+                    valB = Integer.toString(b.getInt("GOALS") - b.getInt("CONCEDED"));
+
+                    if(valB.compareTo(valA) != 0){
+                        return valB.compareTo(valA);
+                    }
+
+                    valA =  a.get("REDCARDS").toString();
+                    valB =  b.get("REDCARDS").toString();
+
+                    if(valB.compareTo(valA) != 0){
+                        return valB.compareTo(valA);
+                    }
+
+                    int still_draw =  Match.getRandomIntBetweenRange(0,1);
+                    if(still_draw == 1){
+                        valA = "1"; valB = "0";
+                    }else{
+                        valB= "1"; valA = "0";
+                    }
+
+                    return valB.compareTo(valA);
+
+
+                }catch(JSONException e){
+                    //todo
+                }
+                return valB.compareTo(valA);
+            }
+        });
+
+        return (JSONArray) jsonValues;
+    }
+
 }
